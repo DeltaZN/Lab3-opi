@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui"
+>
+<h:head>
+    <title>Главная страница</title>
+    <h:outputScript library="js" name="indexScript.js"/>
+    <link rel="stylesheet" href="./resources/css/indexStyle.css"/>
+    <link rel="stylesheet" href="../resources/css/indexStyle.css"/>
+
+</h:head>
+<h:body>
+    <header>
+        <h3>Маньшина Елена Группа Р3214 <br>Вариант 64654</br></h3>
+        <p:clock displayMode="analog" />
+    </header>
+<div id="content">
+    <div id="clock"/>
+            <h:form id="form_toMain">
+                <div id="input_div">
+                    <h:outputLabel for="login" value="Логин:"/>
+
+                    <h:inputText styleClass="login" id="login" value="#{userBean.name}"
+                                 label="Логин">
+                        <f:converter converterId="loginConverter"/>
+                        <f:ajax render="login_message" execute="@form" event="keyup"/>
+                        <f:ajax render="login_message" execute="@form" event="click"/>
+                    </h:inputText>
+
+                    <h:message id="login_message" styleClass="message" for="login"/>
+                </div>
+            <h:commandButton value="Войти" action="#{pointsTableBean.init}"/>
+        </h:form>
+    </div>
+</h:body>
+</html>

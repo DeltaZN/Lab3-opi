@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:h="http://xmlns.jcp.org/jsf/html"
+      xmlns:f="http://xmlns.jcp.org/jsf/core"
+      xmlns:p="http://primefaces.org/ui">
+
+
+<h:head>
+    <title>Лабораторная 3</title>
+    <link rel="stylesheet" href="../resources/css/mainStyle.css"/>
+    <link rel="stylesheet" href="./resources/css/mainStyle.css"/>
+
+
+</h:head>
+<h:body>
+    <header>
+        <h3>Маньшина Елена Группа Р3214 <br>Вариант 64654</br></h3>
+    </header>
+    <p id="title">Определение попадания точки на координатной плоскости в заданную область ʕ ᵔᴥᵔ ʔ </p>
+    <div id="container">
+        <div id="picture">
+            <h:form id="canvas_form">
+                <h:inputHidden id="x_Canvas" value="#{pointsTableBean.XCanvas}"/>
+                <h:inputHidden id="y_Canvas" value="#{pointsTableBean.YCanvas}"/>
+                <h:inputHidden name="timezoneOffset" id="timezoneOffset_id_canvas"
+                               value='#{pointsTableBean.timezoneOffset}'></h:inputHidden>
+                <div class="picture">
+                    <canvas id="myCanvas" width="305" height="305"/>
+                </div>
+                <p:remoteCommand name="addPointFromCanvas" update=":pointsTable"
+                                 action="#{pointsTableBean.addPointFromCanvas()}"/>
+            </h:form>
+        </div>
+        <div id="content">
+            <h:form id="form">
+                <div>
+                    <h:outputLabel for="x" value="Изменение X"/>
+                    <h:selectOneRadio id="x" value="#{pointsTableBean.x}">
+                        <f:selectItem class="selectX" itemValue="-4" itemLabel="-4"/>
+                        <f:selectItem class="selectX" itemValue="-3" itemLabel="-3"/>
+                        <f:selectItem class="selectX" itemValue="-2" itemLabel="-2"/>
+                        <f:selectItem class="selectX" itemValue="-1" itemLabel="-1"/>
+                        <f:selectItem class="selectX" itemValue="0" itemLabel="0"/>
+                        <f:selectItem class="selectX" itemValue="1" itemLabel="1"/>
+                        <f:selectItem class="selectX" itemValue="2" itemLabel="2"/>
+                        <f:selectItem class="selectX" itemValue="3" itemLabel="3"/>
+                        <f:selectItem class="selectX" itemValue="4" itemLabel="4"/>
+                    </h:selectOneRadio>
+                </div>
+                <div id="input_div">
+                    <h:outputLabel for="form_input" value="Изменение Y"/>
+
+                    <h:inputText styleClass="form_input" id="form_input" value="#{pointsTableBean.y}"
+                                 label="Значение Y">
+                        <f:converter converterId="yConverter"/>
+                        <f:validator validatorId="textValidator" for="form_input"></f:validator>
+                        <f:ajax render="y_message" event="keyup"/>
+                    </h:inputText>
+                    <h:message id="y_message" styleClass="message" for="form_input" style="color:red"/>
+                </div>
+                <div>
+                    <h:outputLabel for="r" value="Изменение R"/>
+                    <h:selectOneRadio id="r" value="#{pointsTableBean.r}">
+                        <f:selectItem itemValue="1" itemLabel="1"/>
+                        <f:selectItem itemValue="2" itemLabel="2"/>
+                        <f:selectItem itemValue="3" itemLabel="3"/>
+                        <f:selectItem itemValue="4" itemLabel="4"/>
+                        <f:selectItem itemValue="5" itemLabel="5"/>
+                        <f:ajax render="pointsTable" event="click"/>
+                    </h:selectOneRadio>
+                </div>
+
+
+                <h:inputHidden name="timezoneOffset" id="timezoneOffset_id"
+                               value='#{pointsTableBean.timezoneOffset}'></h:inputHidden>
+
+                <h:commandButton id="sendForm" value="Отправить" action="#{pointsTableBean.addPointFromForm()}">
+                    <f:ajax execute="form" render="pointsTable"/>
+                </h:commandButton>
+
+            </h:form>
+            <h:form styleClass="form_toMain">
+                <h:commandButton value="Выйти" action="#{userBean.logOut}"/></h:form>
+        </div>
+    </div>
+    <div id="answer">
+        <div class="tabelArea">
+            <h:panelGroup id="pointsTable">
+                <h:outputScript library="js" name="script.js"/>
+                <h:dataTable value="#{pointsTableBean.points}" var="point" styleClass="answer_table">
+                    <h:column>
+                        <f:facet name="header">X</f:facet>
+                        <div class="tdScroll">#{point.x}</div>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">Y</f:facet>
+                        <div class="tdScroll">#{point.y}</div>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">R</f:facet>
+                        #{point.r}
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">Попадание</f:facet>
+                        #{point.hit}
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">Текущее время</f:facet>
+                        #{point.currentTime}
+                        <h:outputScript>#{point.getDrawPoint(pointsTableBean.r)}</h:outputScript>
+                    </h:column>
+                    <h:column>
+                        <f:facet name="header">Применить текущий радиус</f:facet>
+                            <p:commandButton value="Применить" action="#{pointsTableBean.updatePoint(point)}" update=":pointsTable">
+                            </p:commandButton>
+                    </h:column>
+                </h:dataTable>
+            </h:panelGroup>
+        </div>
+    </div>
+</h:body>
+
+</html>

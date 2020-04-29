@@ -1,0 +1,115 @@
+body {
+    font-family: 'Tenor Sans', sans-serif !important;
+    min-width: 1200px;
+    overflow-x:  hidden;
+    background-image: url("../img/index.jpg");
+    background-position: center center;
+    background-size: cover;
+}
+
+p {
+    font-size: 1em;
+    font-weight: 300;
+    margin-block-start: 0.5em;
+    margin-block-end: 0.5em;
+}
+
+header {
+    width: 100%;
+    height: 110px;
+}
+
+.ui-analog-clock {
+    width: 120px;
+    float: right;
+    margin: 2%;
+}
+
+h3 {
+    display: block;
+    position: absolute;
+    margin: 0% 0.5%;
+    height: 60px;
+    width: 550px;
+    background-image: url("../img/gif.gif");
+    color: rgb(255, 255, 255);
+    font-size: 1.6em;
+    line-height: 1.7em; /* расстояние между строками */
+    font-weight: 100;
+}
+
+#content {
+    font-weight: 700;
+    margin: 7% 40%;
+    padding: 1% 0%;
+    width: 300px;
+    height: 200px;
+    color: rgb(84, 21, 29);
+    line-height: 2em; /* расстояние между строками */
+    background-color: rgba(219, 196, 219, 0.39);
+    text-align: center;
+    border: none;
+    border-radius: 8px;
+}
+
+form {
+    margin: 7% 3%;
+}
+
+.message{
+    color: rgb(84, 21, 29);
+}
+
+input[type="submit"], #clock {
+    display: block;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+    background-color: rgba(128, 32, 64, 1);
+    background-clip: border-box;
+}
+
+#clock{
+    margin: 2% 21%;
+    width: 170px;
+}
+
+input[type="submit"] {
+    margin: 2% 39%;
+    padding: 3%;
+    width: 60px;
+}
+
+input[type="submit"]:hover, #clock:hover {
+    transition: all 0.3s ease-out;
+    transform: scale(1.02, 1.02);
+    box-shadow: rgba(255, 255, 255, 0.3) 0 0 16px 2px;
+    background: rgba(178, 81, 109, 0.55) !important;
+}
+
+.login  {
+
+    background: rgba(128, 32, 64, 1);
+    padding: 1%;
+    width: 50%;
+    margin: 0.5% 25%;
+    display: block;
+
+    color: rgb(255, 255, 255);
+    border: none;
+    border-radius: 8px;
+    outline: none;
+
+    font-size: 1em;
+    font-weight: 300;
+
+    transition: transform 0.3s ease-out;
+}
+
+
+.login:focus {
+    transition: transform 0.3s ease-out;
+    transform: scale(1.02, 1.02);
+    background: rgba(178, 81, 109, 0.55);
+}
