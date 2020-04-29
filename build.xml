@@ -7,7 +7,7 @@
 
     <path id="build.classpath">
         <fileset dir="${lib.dir}">
-            <include name="*.jar" />
+            <include name="**/*.jar" />
         </fileset>
     </path>
     <!-- Deletes the existing build, docs and dist directory-->
@@ -25,13 +25,16 @@
     <!-- Compiles the java code (including the usage of library for JUnit -->
     <target name="compile" depends="clean, makedir">
         <javac srcdir="${src.dir}" destdir="${build.dir}" classpathref="build.classpath" />
+        <copy todir="${build.dir}">
+            <fileset dir="${src.dir}/main/resources/"/>
+        </copy>
     </target>
 
     <!--Creates the deployable jar file  -->
     <target name="war" depends="compile">
-        <war destfile="${dist.dir}\Lab3-1.war" webxml="${src.dir}/main/webapp/WEB-INF/web.xml">
+        <war destfile="${dist.dir}/Lab3-1.war" webxml="${src.dir}/main/webapp/WEB-INF/web.xml">
             <fileset dir="${src.dir}/main/webapp"/>
-            <lib dir="${lib.dir}"/>
+            <lib dir="${lib.dir}/required"/>
             <classes dir="${build.dir}"/>
         </war>
     </target>
