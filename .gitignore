@@ -1,6 +1,9 @@
 Lab3.iml
 .idea
 target
+cache
 dist
 lib
 bin
+doc
+MANIFEST.MF

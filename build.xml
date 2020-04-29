@@ -1,45 +1,76 @@
 <?xml version="1.0"?>
 <project name="Lab3-web" default="main" basedir=".">
-    <property name="src.dir" location="src" />
-    <property name="build.dir" location="bin" />
-    <property name="dist.dir" location="dist" />
-    <property name="lib.dir" location="lib" />
+    <property name="src" location="src" />
+    <property name="build" location="bin" />
+    <property name="dist" location="dist" />
+    <property name="lib" location="lib" />
+    <property name="doc" location="doc" />
+    <property name="cache" location="cache" />
 
-    <path id="build.classpath">
-        <fileset dir="${lib.dir}">
+    <path id="classpath">
+        <fileset dir="${lib}">
             <include name="**/*.jar" />
         </fileset>
     </path>
-    <!-- Deletes the existing build, docs and dist directory-->
+
     <target name="clean">
-        <delete dir="${build.dir}" />
-        <delete dir="${dist.dir}" />
+        <delete dir="${cache}" />
+        <delete dir="${build}" />
+        <delete dir="${dist}" />
+        <delete dir="${doc}" />
+        <delete file="MANIFEST.MF" />
     </target>
 
-    <!-- Creates the  build, docs and dist directory-->
     <target name="makedir">
-        <mkdir dir="${build.dir}" />
-        <mkdir dir="${dist.dir}" />
+        <mkdir dir="${cache}" />
+        <mkdir dir="${build}" />
+        <mkdir dir="${dist}" />
+        <mkdir dir="${doc}" />
     </target>
 
-    <!-- Compiles the java code (including the usage of library for JUnit -->
+    <target name="genchecksum" >
+        <checksum todir="${cache}/MD5" algorithm="MD5" totalproperty="md5">
+            <fileset dir="${src}"/>
+            <fileset dir="${lib}"/>
+        </checksum>
+
+        <checksum todir="${cache}/SHA1" algorithm="SHA-1" totalproperty="sha1">
+            <fileset dir="${src}"/>
+            <fileset dir="${lib}"/>
+        </checksum>
+    </target>
+
     <target name="compile" depends="clean, makedir">
-        <javac srcdir="${src.dir}" destdir="${build.dir}" classpathref="build.classpath" />
-        <copy todir="${build.dir}">
-            <fileset dir="${src.dir}/main/resources/"/>
-        </copy>
+        <javac srcdir="${src}" destdir="${build}" classpathref="classpath" />
     </target>
 
-    <!--Creates the deployable jar file  -->
-    <target name="war" depends="compile">
-        <war destfile="${dist.dir}/Lab3-1.war" webxml="${src.dir}/main/webapp/WEB-INF/web.xml">
-            <fileset dir="${src.dir}/main/webapp"/>
-            <lib dir="${lib.dir}/required"/>
-            <classes dir="${build.dir}"/>
+    <target name="doc" depends="clean, genchecksum">
+        <manifest file="MANIFEST.MF">
+            <attribute name="MD5" value="${md5}"/>
+            <attribute name="SHA-1" value="${sha1}"/>
+        </manifest>
+
+        <javadoc sourcepath="${src}/main/java" destdir="${doc}"/>
+    </target>
+
+    <target name="build" depends="compile, doc">
+        <copy todir="${build}">
+            <fileset dir="${src}/main/resources/"/>
+        </copy>
+        <war destfile="${dist}/Lab3-1.war" webxml="${src}/main/webapp/WEB-INF/web.xml" manifest="MANIFEST.MF">
+            <fileset dir="${src}/main/webapp"/>
+            <lib dir="${lib}/required"/>
+            <classes dir="${build}"/>
         </war>
     </target>
 
-    <target name="main" depends="compile, war">
+    <target name="test" depends="build">
+    </target>
+
+    <target name="history" depends="compile">
+    </target>
+
+    <target name="main" depends="build">
         <description>Main target</description>
     </target>
 
