@@ -3,13 +3,16 @@ package app.Controller;
 import app.Entities.Point;
 import app.Entities.User;
 import app.Model.Graphic;
-import app.Util.HibernateSessionFactoryUtil;
 import lombok.Data;
-import org.hibernate.Session;
-import org.hibernate.query.Query;
+
+import javax.annotation.Resource;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+import javax.persistence.Query;
+import javax.transaction.*;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
@@ -17,6 +20,7 @@ import java.util.List;
 @ManagedBean
 @ApplicationScoped
 @Data
+
 public class PointsTableBean implements Serializable {
 
     private BigDecimal XCanvas;
@@ -25,19 +29,23 @@ public class PointsTableBean implements Serializable {
     private BigDecimal y;
     private double r = 1;
     private int timezoneOffset;
-    private org.hibernate.Transaction tx;
-    public Session session = HibernateSessionFactoryUtil.getSessionFactory().openSession();
+
+    @PersistenceContext(unitName = "hibernate")
+    private EntityManager em;
+
+    @Resource
+    private UserTransaction userTransaction;
 
     @ManagedProperty(value = "#{userBean}")
     private UserBean userBean;
     private User user;
 
-    public String init() {
+    public String init() throws Exception {
         user = new User(userBean.getName());
         userBean.logIn();
-        tx = session.beginTransaction();
-        session.merge(user);
-        tx.commit();
+        userTransaction.begin();
+        em.merge(user);
+        userTransaction.commit();
         return "toMain";
     }
 
@@ -48,23 +56,27 @@ public class PointsTableBean implements Serializable {
 
     private void addPoint(Point point) {
         point.setUser(user);
-        tx = session.beginTransaction();
-        session.save(point);
-        tx.commit();
+        try {
+            userTransaction.begin();
+            em.persist(point);
+            userTransaction.commit();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    public void addPointFromForm() {
+    public void addPointFromForm()  {
         Point point = new Point(x, y, r, timezoneOffset);
         point.setCurrentTime(timezoneOffset);
         addPoint(point);
     }
 
-    public void updatePoint(Point point) {
+    public void updatePoint(Point point) throws Exception {
         point.setR(r);
         point.setHit(Graphic.isHit(point, r));
-        tx = session.beginTransaction();
-        session.merge(point);
-        tx.commit();
+        userTransaction.begin();
+        em.merge(point);
+        userTransaction.commit();
     }
 
     public void addPointFromCanvas() {
@@ -73,11 +85,9 @@ public class PointsTableBean implements Serializable {
 
 
     public List<Point> getPoints() {
-
-        String hql = "from Point p WHERE p.user = :id";
-        Query query = session.createQuery(hql);
+        Query query = em.createQuery("select p from Point p WHERE p.user = :id");
         query.setParameter("id", user);
-        List<Point> points = (List<Point>) query.list();
+        List<Point> points = (List<Point>) query.getResultList();
         points.sort((p1, p2) -> p1.getId() > p2.getId() ? 1 : -1);
         return points;
     }
