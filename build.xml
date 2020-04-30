@@ -1,19 +1,40 @@
 <?xml version="1.0"?>
 <project name="Lab3-web" default="main" basedir=".">
     <property name="src" location="src" />
+    <property name="src.main" location="src/main" />
+    <property name="src.test" location="src/test" />
     <property name="build" location="bin" />
+    <property name="build.main" location="bin/main" />
     <property name="dist" location="dist" />
     <property name="lib" location="lib" />
+    <property name="lib.required" location="lib/required" />
+    <property name="lib.compile" location="lib/provided" />
     <property name="doc" location="doc" />
     <property name="cache" location="cache" />
+    <property name="build.test" location="bin/test" />
+    <property name="repUrl" value="file:///home/s265082/lab2" />
 
-    <path id="classpath">
-        <fileset dir="${lib}">
-            <include name="**/*.jar" />
-        </fileset>
+<!--    <exec executable="svn" outputproperty="revN">-->
+<!--        <arg line=" info ${repUrl} | grep 'Revision' |  awk '{ print $2; }'" />-->
+<!--    </exec>-->
+
+    <path id="classpathCompile">
+        <fileset dir="${lib}" includes="**/*.jar"/>
+    </path>
+
+    <path id="classpathTestcompile" >
+        <fileset dir="${lib}" includes="**/*.jar"/>
+        <pathelement path="${build.main}"/>
+    </path>
+
+    <path id="test" >
+        <fileset dir="${lib}" includes="**/*.jar"/>
+        <pathelement path="${build.main}"/>
+        <pathelement path="${build.test}"/>
     </path>
 
     <target name="clean">
+        <delete dir="${build}" />
         <delete dir="${cache}" />
         <delete dir="${build}" />
         <delete dir="${dist}" />
@@ -22,13 +43,14 @@
     </target>
 
     <target name="makedir">
+        <mkdir dir="${build.main}" />
+        <mkdir dir="${build.test}" />
         <mkdir dir="${cache}" />
-        <mkdir dir="${build}" />
         <mkdir dir="${dist}" />
         <mkdir dir="${doc}" />
     </target>
 
-    <target name="genchecksum" >
+    <target name="genchecksum" depends="makedir" >
         <checksum todir="${cache}/MD5" algorithm="MD5" totalproperty="md5">
             <fileset dir="${src}"/>
             <fileset dir="${lib}"/>
@@ -40,8 +62,28 @@
         </checksum>
     </target>
 
-    <target name="compile" depends="clean, makedir">
-        <javac srcdir="${src}" destdir="${build}" classpathref="classpath" />
+    <target name="compile" depends="clean, makedir" >
+        <javac srcdir="${src.main}" destdir="${build.main}" classpathref="classpathCompile" errorProperty="compileFail" failonerror="false" />
+    </target>
+
+    <target name="testcompile" depends="compile" >
+        <javac srcdir="${src.test}" destdir="${build.test}" classpathref="classpathTestcompile"/>
+    </target>
+
+    <target name="loadFromSvn">
+        <exec executable="svn">
+            <arg value="checkout"/>
+            <arg value="-r"/>
+            <arg value="${revN}"/>
+            <arg value="url://repository/path"/>
+        </exec>
+        <antcall target="compile"/>
+        <antcall target="history"/>
+    </target>
+
+    <target name="history" depends="compile" if="compileFail">
+        <echo>Compile fails</echo>
+        <antcall target="loadFromSvn"/>
     </target>
 
     <target name="doc" depends="clean, genchecksum">
@@ -50,27 +92,33 @@
             <attribute name="SHA-1" value="${sha1}"/>
         </manifest>
 
-        <javadoc sourcepath="${src}/main/java" destdir="${doc}"/>
+        <javadoc sourcepath="${src.main}/java" destdir="${doc}"/>
     </target>
 
-    <target name="build" depends="compile, doc">
-        <copy todir="${build}">
-            <fileset dir="${src}/main/resources/"/>
+    <target name="build" depends="history, doc">
+        <copy todir="${build.main}">
+            <fileset dir="${src.main}/resources/"/>
         </copy>
-        <war destfile="${dist}/Lab3-1.war" webxml="${src}/main/webapp/WEB-INF/web.xml" manifest="MANIFEST.MF">
-            <fileset dir="${src}/main/webapp"/>
-            <lib dir="${lib}/required"/>
-            <classes dir="${build}"/>
+        <war destfile="${dist}/Lab3-1.war" webxml="${src.main}/webapp/WEB-INF/web.xml" manifest="MANIFEST.MF">
+            <fileset dir="${src.main}/webapp"/>
+            <lib dir="${lib.required}"/>
+            <classes dir="${build.main}"/>
         </war>
     </target>
 
-    <target name="test" depends="build">
+    <target name="test" depends="build, testcompile">
+        <junit printsummary="on" >
+            <classpath refid="test"/>
+            <batchtest>
+                <fileset dir="${build.test}">
+                    <include name="**/*Test*" />
+                </fileset>
+            </batchtest>
+            <formatter type="brief" usefile="false"/>
+        </junit>
     </target>
 
-    <target name="history" depends="compile">
-    </target>
-
-    <target name="main" depends="build">
+    <target name="main" depends="test">
         <description>Main target</description>
     </target>
 
