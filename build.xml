@@ -12,10 +12,10 @@
     <property name="doc" location="doc"/>
     <property name="cache" location="cache"/>
     <property name="build.test" location="bin/test"/>
-    <property name="svn.rep" value="../svn"/>
-    <property name="svn.rep.url" value="file:///home/gosha/svn/lab3"/>
-    <property name="svn.rep.main" value="../svn/trunk/main"/>
-    <property name="svn.rep.test" value="../svn/trunk/test"/>
+    <property name="svn.rep" value="${src}/lab3svn"/>
+    <property name="svn.rep.url" value="file:///home/gosha/svn/lab3svn"/>
+    <property name="svn.rep.main" value="${src}/lab3svn/main"/>
+    <property name="svn.rep.test" value="${src}/lab3svn/test"/>
 
     <exec executable="svn" outputproperty="fullInfo">
         <arg line="info ${svn.rep.url}"/>
@@ -32,6 +32,7 @@
 
     <loadproperties srcFile="temp.properties"/>
 
+
     <path id="classpathCompile">
         <fileset dir="${lib}" includes="**/*.jar"/>
     </path>
@@ -46,6 +47,11 @@
         <pathelement path="${build.main}"/>
         <pathelement path="${build.test}"/>
     </path>
+
+
+
+
+
 
     <target name="clean">
         <delete dir="${build}"/>
@@ -65,12 +71,14 @@
 
     <target name="genchecksum" depends="makedir">
         <checksum todir="${cache}/MD5" algorithm="MD5" totalproperty="md5">
-            <fileset dir="${src}"/>
+            <fileset dir="${src.test}"/>
+            <fileset dir="${src.main}"/>
             <fileset dir="${lib}"/>
         </checksum>
 
         <checksum todir="${cache}/SHA1" algorithm="SHA-1" totalproperty="sha1">
-            <fileset dir="${src}"/>
+            <fileset dir="${src.test}"/>
+            <fileset dir="${src.main}"/>
             <fileset dir="${lib}"/>
         </checksum>
     </target>
@@ -96,11 +104,12 @@
     </target>
 
     <target name="testcompile" depends="compile">
-        <javac srcdir="${src.test}" destdir="${build.test}" classpathref="classpathTestcompile"
-        />
+        <javac srcdir="${src.test}" destdir="${build.test}" classpathref="classpathTestcompile"/>
     </target>
 
     <target name="loadFromSvn" unless="build.successful">
+        <echo>Compile fails</echo>
+
         <exec executable="svn">
             <arg value="up"/>
             <arg value="-r"/>
@@ -109,30 +118,41 @@
         </exec>
         <delete dir="${src.main}"/>
         <delete dir="${src.test}"/>
-        <copy todir="${src}">
+        <copy todir="${src.main}">
             <fileset dir="${svn.rep.main}"/>
+        </copy>
+        <copy todir="${src.test}">
             <fileset dir="${svn.rep.test}"/>
         </copy>
-        <antcall target="compile"/>
-        <antcall target="history"/>
+
+        <antcall target="history">
+            <param name="svn.revision" value="${svn.revision}"/>
+        </antcall>
     </target>
 
     <target name="history" depends="compile" if="dohistory">
-        <echo>Compile fails</echo>
-
-        <propertyfile file="temp.properties">
-            <entry key="svn.revision" type="int" operation="-" value="1"/>
-        </propertyfile>
-        <loadproperties srcFile="temp.properties"/>
-
         <condition property="norevisions">
             <equals arg1="${svn.revision}" arg2="0"/>
         </condition>
         <fail if="norevisions">
             No revisions left
         </fail>
-        <antcall target="loadFromSvn"/>
-        <antcall target="diff"/>
+
+        <propertyfile file="temp.properties">
+            <entry key="svn.revision" value="${svn.revision}"/>
+        </propertyfile>
+        <propertyfile file="temp.properties">
+            <entry key="svn.revision" type="int" operation="-" value="1"/>
+        </propertyfile>
+        <local name="svn.revision"/>
+        <loadproperties srcFile="temp.properties"/>
+
+        <antcall target="loadFromSvn" >
+            <param name="svn.revision" value="${svn.revision}"/>
+        </antcall>
+        <antcall target="diff">
+            <param name="svn.revision" value="${svn.revision}"/>
+        </antcall>
     </target>
 
     <target name="diff" if="build.successful">
@@ -142,8 +162,11 @@
         <propertyfile file="temp.properties">
             <entry key="svn.revision.next" type="int" operation="+" value="1"/>
         </propertyfile>
+        <local name="svn.revision"/>
+        <local name="svn.revision.next"/>
         <loadproperties srcFile="temp.properties"/>
 
+        <echo message="Write diff to file"/>
         <exec executable="svn" output="${dist}/diff">
             <arg value="diff"/>
             <arg value="${svn.rep}"/>
