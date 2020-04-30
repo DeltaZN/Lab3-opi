@@ -1,56 +1,69 @@
 <?xml version="1.0"?>
 <project name="Lab3-web" default="main" basedir=".">
-    <property name="src" location="src" />
-    <property name="src.main" location="src/main" />
-    <property name="src.test" location="src/test" />
-    <property name="build" location="bin" />
-    <property name="build.main" location="bin/main" />
-    <property name="dist" location="dist" />
-    <property name="lib" location="lib" />
-    <property name="lib.required" location="lib/required" />
-    <property name="lib.compile" location="lib/provided" />
-    <property name="doc" location="doc" />
-    <property name="cache" location="cache" />
-    <property name="build.test" location="bin/test" />
-    <property name="repUrl" value="file:///home/s265082/lab2" />
+    <property name="src" location="src"/>
+    <property name="src.main" location="src/main"/>
+    <property name="src.test" location="src/test"/>
+    <property name="build" location="bin"/>
+    <property name="build.main" location="bin/main"/>
+    <property name="dist" location="dist"/>
+    <property name="lib" location="lib"/>
+    <property name="lib.required" location="lib/required"/>
+    <property name="lib.compile" location="lib/provided"/>
+    <property name="doc" location="doc"/>
+    <property name="cache" location="cache"/>
+    <property name="build.test" location="bin/test"/>
+    <property name="svn.rep" value="../svn"/>
+    <property name="svn.rep.url" value="file:///home/gosha/svn/lab3"/>
+    <property name="svn.rep.main" value="../svn/trunk/main"/>
+    <property name="svn.rep.test" value="../svn/trunk/test"/>
 
-<!--    <exec executable="svn" outputproperty="revN">-->
-<!--        <arg line=" info ${repUrl} | grep 'Revision' |  awk '{ print $2; }'" />-->
-<!--    </exec>-->
+    <exec executable="svn" outputproperty="fullInfo">
+        <arg line="info ${svn.rep.url}"/>
+    </exec>
+    <exec executable="grep" inputstring="${fullInfo}" outputproperty="revision">
+        <arg line="'Редакция:'"/>
+    </exec>
+    <exec executable="awk" inputstring="${revision}" outputproperty="revN">
+        <arg line="'{ print $2; }'"/>
+    </exec>
+    <propertyfile file="temp.properties">
+        <entry key="svn.revision" value="${revN}"/>
+    </propertyfile>
+
+    <loadproperties srcFile="temp.properties"/>
 
     <path id="classpathCompile">
         <fileset dir="${lib}" includes="**/*.jar"/>
     </path>
 
-    <path id="classpathTestcompile" >
+    <path id="classpathTestcompile">
         <fileset dir="${lib}" includes="**/*.jar"/>
         <pathelement path="${build.main}"/>
     </path>
 
-    <path id="test" >
+    <path id="test">
         <fileset dir="${lib}" includes="**/*.jar"/>
         <pathelement path="${build.main}"/>
         <pathelement path="${build.test}"/>
     </path>
 
     <target name="clean">
-        <delete dir="${build}" />
-        <delete dir="${cache}" />
-        <delete dir="${build}" />
-        <delete dir="${dist}" />
-        <delete dir="${doc}" />
-        <delete file="MANIFEST.MF" />
+        <delete dir="${build}"/>
+        <delete dir="${cache}"/>
+        <delete dir="${build}"/>
+        <delete dir="${dist}"/>
+        <delete dir="${doc}"/>
     </target>
 
     <target name="makedir">
-        <mkdir dir="${build.main}" />
-        <mkdir dir="${build.test}" />
-        <mkdir dir="${cache}" />
-        <mkdir dir="${dist}" />
-        <mkdir dir="${doc}" />
+        <mkdir dir="${build.main}"/>
+        <mkdir dir="${build.test}"/>
+        <mkdir dir="${cache}"/>
+        <mkdir dir="${dist}"/>
+        <mkdir dir="${doc}"/>
     </target>
 
-    <target name="genchecksum" depends="makedir" >
+    <target name="genchecksum" depends="makedir">
         <checksum todir="${cache}/MD5" algorithm="MD5" totalproperty="md5">
             <fileset dir="${src}"/>
             <fileset dir="${lib}"/>
@@ -62,44 +75,96 @@
         </checksum>
     </target>
 
-    <target name="compile" depends="clean, makedir" >
-        <javac srcdir="${src.main}" destdir="${build.main}" classpathref="classpathCompile" errorProperty="compileFail" failonerror="false" />
+    <target name="compile" depends="clean, makedir">
+        <loadproperties srcFile="temp.properties"/>
+        <local name="compile.fail"/>
+        <javac srcdir="${src.main}" destdir="${build.main}" classpathref="classpathCompile" errorProperty="compile.fail"
+               failonerror="false"/>
+
+        <condition property="dohistory">
+            <equals arg1="${compile.fail}" arg2="true"/>
+        </condition>
+        <condition property="build.successful">
+            <not>
+                <equals arg1="${compile.fail}" arg2="true"/>
+            </not>
+        </condition>
+
+        <propertyfile file="temp.properties">
+            <entry key="compile.fail" value="false"/>
+        </propertyfile>
     </target>
 
-    <target name="testcompile" depends="compile" >
-        <javac srcdir="${src.test}" destdir="${build.test}" classpathref="classpathTestcompile"/>
+    <target name="testcompile" depends="compile">
+        <javac srcdir="${src.test}" destdir="${build.test}" classpathref="classpathTestcompile"
+        />
     </target>
 
-    <target name="loadFromSvn">
+    <target name="loadFromSvn" unless="build.successful">
         <exec executable="svn">
-            <arg value="checkout"/>
+            <arg value="up"/>
             <arg value="-r"/>
-            <arg value="${revN}"/>
-            <arg value="url://repository/path"/>
+            <arg value="${svn.revision}"/>
+            <arg value="${svn.rep}"/>
         </exec>
+        <delete dir="${src.main}"/>
+        <delete dir="${src.test}"/>
+        <copy todir="${src}">
+            <fileset dir="${svn.rep.main}"/>
+            <fileset dir="${svn.rep.test}"/>
+        </copy>
         <antcall target="compile"/>
         <antcall target="history"/>
     </target>
 
-    <target name="history" depends="compile" if="compileFail">
+    <target name="history" depends="compile" if="dohistory">
         <echo>Compile fails</echo>
+
+        <propertyfile file="temp.properties">
+            <entry key="svn.revision" type="int" operation="-" value="1"/>
+        </propertyfile>
+        <loadproperties srcFile="temp.properties"/>
+
+        <condition property="norevisions">
+            <equals arg1="${svn.revision}" arg2="0"/>
+        </condition>
+        <fail if="norevisions">
+            No revisions left
+        </fail>
         <antcall target="loadFromSvn"/>
+        <antcall target="diff"/>
+    </target>
+
+    <target name="diff" if="build.successful">
+        <propertyfile file="temp.properties">
+            <entry key="svn.revision.next" value="${svn.revision}"/>
+        </propertyfile>
+        <propertyfile file="temp.properties">
+            <entry key="svn.revision.next" type="int" operation="+" value="1"/>
+        </propertyfile>
+        <loadproperties srcFile="temp.properties"/>
+
+        <exec executable="svn" output="${dist}/diff">
+            <arg value="diff"/>
+            <arg value="${svn.rep}"/>
+            <arg value="-r"/>
+            <arg value="${svn.revision}:${svn.revision.next}"/>
+        </exec>
     </target>
 
     <target name="doc" depends="clean, genchecksum">
-        <manifest file="MANIFEST.MF">
+        <manifest file="${cache}/MANIFEST.MF">
             <attribute name="MD5" value="${md5}"/>
             <attribute name="SHA-1" value="${sha1}"/>
         </manifest>
-
-        <javadoc sourcepath="${src.main}/java" destdir="${doc}"/>
+        <javadoc sourcepath="${src.main}/java" destdir="${doc}" classpathref="classpathCompile"/>
     </target>
 
     <target name="build" depends="history, doc">
         <copy todir="${build.main}">
             <fileset dir="${src.main}/resources/"/>
         </copy>
-        <war destfile="${dist}/Lab3-1.war" webxml="${src.main}/webapp/WEB-INF/web.xml" manifest="MANIFEST.MF">
+        <war destfile="${dist}/Lab3-1.war" webxml="${src.main}/webapp/WEB-INF/web.xml" manifest="${cache}/MANIFEST.MF">
             <fileset dir="${src.main}/webapp"/>
             <lib dir="${lib.required}"/>
             <classes dir="${build.main}"/>
@@ -107,11 +172,11 @@
     </target>
 
     <target name="test" depends="build, testcompile">
-        <junit printsummary="on" >
+        <junit printsummary="on">
             <classpath refid="test"/>
             <batchtest>
                 <fileset dir="${build.test}">
-                    <include name="**/*Test*" />
+                    <include name="**/*Test*"/>
                 </fileset>
             </batchtest>
             <formatter type="brief" usefile="false"/>
