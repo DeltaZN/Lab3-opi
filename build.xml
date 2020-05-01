@@ -1,21 +1,6 @@
 <?xml version="1.0"?>
 <project name="Lab3-web" default="main" basedir=".">
-    <property name="src" location="src"/>
-    <property name="src.main" location="src/main"/>
-    <property name="src.test" location="src/test"/>
-    <property name="build" location="bin"/>
-    <property name="build.main" location="bin/main"/>
-    <property name="dist" location="dist"/>
-    <property name="lib" location="lib"/>
-    <property name="lib.required" location="lib/required"/>
-    <property name="lib.compile" location="lib/provided"/>
-    <property name="doc" location="doc"/>
-    <property name="cache" location="cache"/>
-    <property name="build.test" location="bin/test"/>
-    <property name="svn.rep" value="${src}/lab3svn"/>
-    <property name="svn.rep.url" value="file:///home/gosha/svn/lab3svn"/>
-    <property name="svn.rep.main" value="${src}/lab3svn/main"/>
-    <property name="svn.rep.test" value="${src}/lab3svn/test"/>
+    <property file="build.properties"/>
 
     <exec executable="svn" outputproperty="fullInfo">
         <arg line="info ${svn.rep.url}"/>
@@ -29,7 +14,9 @@
     <propertyfile file="temp.properties">
         <entry key="svn.revision" value="${revN}"/>
     </propertyfile>
-
+    <propertyfile file="temp.properties">
+        <entry key="svn.revision" type="int" operation="+" value="1"/>
+    </propertyfile>
     <loadproperties srcFile="temp.properties"/>
 
 
@@ -47,11 +34,6 @@
         <pathelement path="${build.main}"/>
         <pathelement path="${build.test}"/>
     </path>
-
-
-
-
-
 
     <target name="clean">
         <delete dir="${build}"/>
@@ -89,7 +71,7 @@
         <javac srcdir="${src.main}" destdir="${build.main}" classpathref="classpathCompile" errorProperty="compile.fail"
                failonerror="false"/>
 
-        <condition property="dohistory">
+        <condition property="build.fail">
             <equals arg1="${compile.fail}" arg2="true"/>
         </condition>
         <condition property="build.successful">
@@ -108,7 +90,7 @@
     </target>
 
     <target name="loadFromSvn" unless="build.successful">
-        <echo>Compile fails</echo>
+        <echo message="Compile fails! Loading rev ${svn.revision}"/>
 
         <exec executable="svn">
             <arg value="up"/>
@@ -130,13 +112,17 @@
         </antcall>
     </target>
 
-    <target name="history" depends="compile" if="dohistory">
+    <target name="history" depends="compile" if="build.fail">
         <condition property="norevisions">
             <equals arg1="${svn.revision}" arg2="0"/>
         </condition>
         <fail if="norevisions">
             No revisions left
         </fail>
+
+        <antcall target="diff">
+            <param name="svn.revision" value="${svn.revision}"/>
+        </antcall>
 
         <propertyfile file="temp.properties">
             <entry key="svn.revision" value="${svn.revision}"/>
@@ -150,23 +136,18 @@
         <antcall target="loadFromSvn" >
             <param name="svn.revision" value="${svn.revision}"/>
         </antcall>
-        <antcall target="diff">
-            <param name="svn.revision" value="${svn.revision}"/>
-        </antcall>
     </target>
 
     <target name="diff" if="build.successful">
-        <propertyfile file="temp.properties">
+        <propertyfile file="temp.properties" >
             <entry key="svn.revision.next" value="${svn.revision}"/>
         </propertyfile>
         <propertyfile file="temp.properties">
             <entry key="svn.revision.next" type="int" operation="+" value="1"/>
         </propertyfile>
-        <local name="svn.revision"/>
-        <local name="svn.revision.next"/>
         <loadproperties srcFile="temp.properties"/>
 
-        <echo message="Write diff to file"/>
+        <echo message="Write diff to file for revs ${svn.revision}:${svn.revision.next}"/>
         <exec executable="svn" output="${dist}/diff">
             <arg value="diff"/>
             <arg value="${svn.rep}"/>
