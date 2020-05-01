@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<project name="Lab3-web" default="main" basedir=".">
+<project name="LAB3OPI" default="main" basedir=".">
     <property file="build.properties"/>
 
     <exec executable="svn" outputproperty="fullInfo">
@@ -11,13 +11,10 @@
     <exec executable="awk" inputstring="${revision}" outputproperty="revN">
         <arg line="'{ print $2; }'"/>
     </exec>
-    <propertyfile file="temp.properties">
+    <propertyfile file="${temp}">
         <entry key="svn.revision" value="${revN}"/>
     </propertyfile>
-    <propertyfile file="temp.properties">
-        <entry key="svn.revision" type="int" operation="+" value="1"/>
-    </propertyfile>
-    <loadproperties srcFile="temp.properties"/>
+    <loadproperties srcFile="${temp}"/>
 
 
     <path id="classpathCompile">
@@ -66,7 +63,7 @@
     </target>
 
     <target name="compile" depends="clean, makedir">
-        <loadproperties srcFile="temp.properties"/>
+        <loadproperties srcFile="${temp}"/>
         <local name="compile.fail"/>
         <javac srcdir="${src.main}" destdir="${build.main}" classpathref="classpathCompile" errorProperty="compile.fail"
                failonerror="false"/>
@@ -80,7 +77,7 @@
             </not>
         </condition>
 
-        <propertyfile file="temp.properties">
+        <propertyfile file="${temp}">
             <entry key="compile.fail" value="false"/>
         </propertyfile>
     </target>
@@ -124,14 +121,14 @@
             <param name="svn.revision" value="${svn.revision}"/>
         </antcall>
 
-        <propertyfile file="temp.properties">
+        <propertyfile file="${temp}">
             <entry key="svn.revision" value="${svn.revision}"/>
         </propertyfile>
-        <propertyfile file="temp.properties">
+        <propertyfile file="${temp}">
             <entry key="svn.revision" type="int" operation="-" value="1"/>
         </propertyfile>
         <local name="svn.revision"/>
-        <loadproperties srcFile="temp.properties"/>
+        <loadproperties srcFile="${temp}"/>
 
         <antcall target="loadFromSvn" >
             <param name="svn.revision" value="${svn.revision}"/>
@@ -139,16 +136,16 @@
     </target>
 
     <target name="diff" if="build.successful">
-        <propertyfile file="temp.properties" >
+        <propertyfile file="${temp}" >
             <entry key="svn.revision.next" value="${svn.revision}"/>
         </propertyfile>
-        <propertyfile file="temp.properties">
+        <propertyfile file="${temp}">
             <entry key="svn.revision.next" type="int" operation="+" value="1"/>
         </propertyfile>
-        <loadproperties srcFile="temp.properties"/>
+        <loadproperties srcFile="${temp}"/>
 
         <echo message="Write diff to file for revs ${svn.revision}:${svn.revision.next}"/>
-        <exec executable="svn" output="${dist}/diff">
+        <exec executable="svn" output="${dist}/${diff.file}">
             <arg value="diff"/>
             <arg value="${svn.rep}"/>
             <arg value="-r"/>
@@ -157,19 +154,19 @@
     </target>
 
     <target name="doc" depends="clean, genchecksum">
-        <manifest file="${cache}/MANIFEST.MF">
+        <manifest file="${manifest}">
             <attribute name="MD5" value="${md5}"/>
             <attribute name="SHA-1" value="${sha1}"/>
         </manifest>
-        <javadoc sourcepath="${src.main}/java" destdir="${doc}" classpathref="classpathCompile"/>
+        <javadoc sourcepath="${src.main.java}" destdir="${doc}" classpathref="classpathCompile"/>
     </target>
 
     <target name="build" depends="history, doc">
         <copy todir="${build.main}">
-            <fileset dir="${src.main}/resources/"/>
+            <fileset dir="${src.main.resources}"/>
         </copy>
-        <war destfile="${dist}/Lab3-1.war" webxml="${src.main}/webapp/WEB-INF/web.xml" manifest="${cache}/MANIFEST.MF">
-            <fileset dir="${src.main}/webapp"/>
+        <war destfile="${dist}/${project.name}.war" webxml="${web.xml}" manifest="${manifest}">
+            <fileset dir="${webapp}"/>
             <lib dir="${lib.required}"/>
             <classes dir="${build.main}"/>
         </war>
