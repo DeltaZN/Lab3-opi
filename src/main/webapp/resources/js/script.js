@@ -186,7 +186,17 @@ function drawFigures(selectedR_value) {
 function drawPoint(x, y, hit) {
 
     ctx.beginPath();
-    ctx.arc(150 + x * 30, 150 - y * 30, 1, 0, 2 * Math.PI, true);
+   // ctx.arc(150 + x * 30, 150 - y * 30, 1, 0, 2 * Math.PI, true);
+    //костыль
+    ctx.moveTo(150 + x * 30, 150 - y * 30);
+    ctx.lineTo(150 + x * 30, 140 - y * 30);
+    ctx.lineTo(154 + x * 30, 130 - y * 30);
+    ctx.lineTo(154 + x * 30, 110 - y * 30);
+    ctx.lineTo(146 + x * 30, 110 - y * 30);
+    ctx.lineTo(146 + x * 30, 130 - y * 30);
+    ctx.lineTo(150 + x * 30, 140 - y * 30);
+    ctx.moveTo(154 + x * 30, 130 - y * 30);
+    ctx.lineTo(146 + x * 30, 130 - y * 30);
     ctx.closePath();
 
     let color = 'red';
@@ -197,17 +207,17 @@ function drawPoint(x, y, hit) {
 
     ctx.strokeStyle = color;
     ctx.fillStyle = color;
-    ctx.fill();
+    //ctx.fill();
     ctx.stroke();
 }
 
 function drawGraph(r) {
     ctx.clearRect(0, 0, 305, 305);
-    ctx.fillStyle = "rgb(255, 162, 211)";
+    ctx.fillStyle = "rgb(0,0,255)";
     ctx.strokeStyle = "rgb(60, 16, 44)";
 
     drawCoordinatePlane(); //отрисовка координатных прямых
-    ctx.fillStyle = "rgb(255, 162, 211)";
+    ctx.fillStyle = "rgb(0,0,255)";
     drawFigures(r);
     drawNumbers();
 
