@@ -1,12 +1,12 @@
 package app.Converter;
 
-import junit.framework.TestCase;
+import org.junit.Assert;
 import org.junit.Test;
 
 import javax.faces.component.html.HtmlInputText;
 import java.math.BigDecimal;
 
-public class YConverterTest extends TestCase {
+public class YConverterTest {
 
     YConverter yConverter = new YConverter();
     HtmlInputText input;
@@ -15,6 +15,6 @@ public class YConverterTest extends TestCase {
     public void testGetAsObject() {
         BigDecimal ans = (BigDecimal) yConverter.getAsObject(null, input, "123");
         BigDecimal expected = new BigDecimal(123);
-        assertEquals(ans, expected);
+        Assert.assertEquals(ans, expected);
     }
 }
