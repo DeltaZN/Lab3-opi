@@ -48,8 +48,8 @@ function clickOnCanvas(elem) {
     let br = myCanvas.getBoundingClientRect();
     let left = br.left; // X координата верхнего левого края канваса
     let top = br.top; // Y координата верхнего левого края канваса
-    document.getElementById("canvas_form:x_Canvas").value = (elem.clientX - 150 - left) / 30;
-    document.getElementById("canvas_form:y_Canvas").value = (-(elem.clientY - top) + 150) / 30;
+    document.getElementById("canvas_form:x_Canvas").value = (elem.clientX - 152 - left) / 30;
+    document.getElementById("canvas_form:y_Canvas").value = (-(elem.clientY - top) + 152) / 30;
 
     addPointFromCanvas(); //вызываем удаленную процедуру по добавлению точки в ArrayList (название метода соотв. значению поля name p:remotecommand)
 }
