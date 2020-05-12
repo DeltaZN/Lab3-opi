@@ -1,9 +1,8 @@
 package app.Model;
 
 import app.Entities.Point;
-import junit.framework.TestCase;
 import org.junit.Assert;
-import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.math.BigDecimal;
@@ -11,10 +10,10 @@ import java.util.ArrayList;
 
 public class GraphicTest {
 
-    ArrayList<Point> points = new ArrayList<>();
+    private static final ArrayList<Point> points = new ArrayList<>();
 
-    @Before
-    public void setUpPoints(){
+    @BeforeClass
+    public static void setUpPoints() {
         points.add(new Point(new BigDecimal(1), new BigDecimal(1),2,180));
         points.add(new Point(new BigDecimal(2), new BigDecimal(2),2,180));
 
